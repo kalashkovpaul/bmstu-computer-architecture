@@ -1,0 +1,19 @@
+\babel@toc {russian}{}\relax 
+\contentsline {chapter}{Введение}{3}{chapter*.2}%
+\contentsline {chapter}{\numberline {1}Задание № 1}{4}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Текст программы по индивидуальному варианту}{4}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Дизассемблерный листинг кода программы}{5}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Псевдокод, поясняющий работу программы}{6}{section.1.3}%
+\contentsline {chapter}{\numberline {2}Задание №2}{8}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Выполнение}{8}{section.2.1}%
+\contentsline {chapter}{\numberline {3}Задание №3}{10}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Выполнение}{10}{section.3.1}%
+\contentsline {chapter}{\numberline {4}Задание №4}{12}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Выполнение}{12}{section.4.1}%
+\contentsline {chapter}{\numberline {5}Задание №5}{14}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Сравнение полученного теоретически значения регистра x31 и полученного в результате симуляции}{14}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Временные диаграммы сигналов, соответствующих всем стадиям выполнения команды 80000010}{15}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Трасса выполнения программы}{16}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Оптимизация программы}{17}{section.5.4}%
+\contentsline {section}{Вывод}{17}{section.5.4}%
+\contentsline {chapter}{Заключение}{18}{chapter*.12}%
