@@ -1,0 +1,109 @@
+\chapter*{Задание 1}
+
+Практикум 1 выполнялся по варианту 4.
+
+\textbf{Цифровой интерполятор ЧПЗ.} Сформировать в хост-подсистеме и передать в SPE 256 значений x и функции f(x)=sin(x), имеющие тип double (где x - ключ, f(x) - значение). Для представления чисел double в целочисленном диапазоне использовать функции double ull2double(uint64\_t) и uint64\_t double2ull(double), входящие в библиотеку sw\_kernel-lib. Для случайного значения, сформированного в хост-подсистеме выполнить поиск ближайшего большего, и передать его в хост-подсистему. Выполнить тестирование работы SPE, сравнив результат с ожидаемым.
+
+Для выполнения данного задания были изменены файлы с кодом примера
+
+В листинге \ref{listing_create} представлено создание и передача данных из буфера.
+
+\begin{center}
+	\begin{lstlisting}[label=listing_create,caption=Создание и передача данных из буфера]
+	__foreach_core(group, core)
+{
+	for (int i=0;i<BURST;i++) {
+		host2gpc_buffer[group][core][2*i] = f_rand(0, 10);
+		host2gpc_buffer[group][core][2*i+1] = rand_number;//i;
+		printf("key: %lf, value: %lf\n", host2gpc_buffer[group][core][2*i], host2gpc_buffer[group][core][2*i+1]);
+	}
+}
+
+__foreach_core(group, core) {
+	lnh_inst.gpc[group][core]->start_async(__event__(insert_burst));
+}
+
+__foreach_core(group, core) {
+	lnh_inst.gpc[group][core]->buf_write(BURST*2*sizeof(double),(char*)host2gpc_buffer[group][core]);
+}
+
+__foreach_core(group, core) {
+	lnh_inst.gpc[group][core]->mq_send(IP);
+}
+	\end{lstlisting}
+\end{center}
+
+В строках 2--8 создаётся буфер с данными, который далее передаётся в глобальную память и загружается в Тераграф с помощью функции \textit{insert\_burst} (листинг \ref{listing_insert}).
+
+\begin{center}
+	\begin{lstlisting}[label=listing_insert,caption=Создание и заполнение графа]
+void insert_burst() {
+	
+	lnh_del_str_sync(TEST_STRUCTURE);
+	unsigned int count = mq_receive();
+	unsigned int size_in_bytes = 2*count*sizeof(uint64_t);
+	uint64_t *buffer = (uint64_t*)malloc(size_in_bytes);
+	buf_read(size_in_bytes, (char*)buffer);
+	for (int i=0; i<count; i++) {
+		lnh_ins_sync(TEST_STRUCTURE,buffer[2*i],buffer[2*i+1]);
+	}
+	lnh_sync();
+	free(buffer);
+}	\end{lstlisting}
+\end{center}
+
+При этом используется функция \textit{mq\_send}, выполняющаяся на ядре (листинг \ref{listing_send}).
+
+\begin{center}
+	\begin{lstlisting}[label=listing_send,caption=Создание и заполнение графа]
+		void get_interface()
+		{
+			lnh_sync();
+			unsigned int key = mq_receive();
+			lnh_search(TEST_STRUCTURE, key);
+			mq_send(lnh_core.result.value);
+	}	\end{lstlisting}
+\end{center}
+
+\clearpage
+Исходя из переданных данных, производится интерполяция (листинг \ref{listing_test}).
+
+\begin{center}
+	\begin{lstlisting}[label=listing_test,caption=Интерполяция переданных  величин]
+void search_burst() {
+	lnh_sync();
+	unsigned int count = lnh_get_num(TEST_STRUCTURE);
+	unsigned int size_in_bytes = 2*count*sizeof(double);
+	double delta = 0;
+	double closest = DBL_MAX;
+	double *buffer = (double*)malloc(2 * sizeof(double));
+	double *old_buffer = (double*)malloc(size_in_bytes);
+	double min_delta = DBL_MAX;
+	lnh_get_first(TEST_STRUCTURE);
+	for (int i=0; i<count; i++) {
+		old_buffer[2*i] = ull2double(lnh_core.result.key);
+		old_buffer[2*i+1] = ull2double(lnh_core.result.value);
+		lnh_next(TEST_STRUCTURE,lnh_core.result.key);
+	}
+	double number_to_interpolate = old_buffer[1];
+	for (int i=0; i<count; i++) {
+		double cur = old_buffer[2*i];
+		if (old_buffer[1] >= old_buffer[2*i])
+		delta = number_to_interpolate - cur;
+		else
+		delta = cur - number_to_interpolate;
+		if (delta < min_delta) {
+			min_delta = delta;
+			closest = cur;
+		}
+	}
+	buffer[0] = old_buffer[1];
+	buffer[1] = closest;
+	buf_write(size_in_bytes, (char*)buffer);
+	mq_send(count);
+	free(buffer);
+	free(old_buffer);
+}
+
+\end{lstlisting}
+\end{center}
